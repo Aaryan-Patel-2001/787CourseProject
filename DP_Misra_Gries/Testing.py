@@ -1,136 +1,167 @@
-from Implementation import DP_Misra_Gries 
+from DP_Misra_Gries.Implementation import DP_Misra_Gries, ChanPrivateMisraGries
 from collections import Counter
 import math
 import statistics
 import matplotlib.pyplot as plt
 
+class Test: 
+    def __init__(self, stream, k, epsilons, delta, universe=None, trials=20, ExperimentName=""):
+        self.stream = stream 
+        self.k = k 
+        self.epsilons = epsilons 
+        self.delta = delta 
+        self.universe = universe
+        self.trials = trials
+        self.ExperimentName = ExperimentName
 
-def exact_histogram(stream):
-    """
-    True non-private counts.
-    """
-    return Counter(stream)
+        pmg_summary = self.evaluate_epsilon_sweep("pmg")
+        chan_summary = self.evaluate_epsilon_sweep("chan")
 
+        self.plot_comparison(pmg_summary, chan_summary)
 
-def evaluate_once(stream, k, epsilon, delta):
-    """
-    Run DP Misra-Gries once and compare output to exact histogram.
-    Missing private counts are treated as 0.
-    """
-    true_counts = exact_histogram(stream)
+    def exact_histogram(self):
+        """
+        True non-private counts.
+        """
+        return Counter(self.stream)
 
-    dp_mg = DP_Misra_Gries(
-        stream=stream,
-        k=k,
-        epsilon=epsilon,
-        delta=delta,
-    )
+    def evaluate_once(self, epsilon, algorithm):
+        """
+        Run one private Misra-Gries variant and compare output to exact histogram.
+        Missing private counts are treated as 0.
 
-    private_counts = dp_mg.compute()
+        algorithm:
+            "pmg"  -> new paper's DP_Misra_Gries
+            "chan" -> Chan et al.-style private Misra-Gries
+        """
+        true_counts = self.exact_histogram()
 
-    # Evaluate over all true items in the stream.
-    # If an item is missing from private_counts, its estimate is 0.
-    errors = {}
-
-    for key, true_count in true_counts.items():
-        private_estimate = private_counts.get(key, 0.0)
-        errors[key] = abs(private_estimate - true_count)
-
-    mae = sum(errors.values()) / len(errors)
-
-    rmse = math.sqrt(
-        sum(error ** 2 for error in errors.values()) / len(errors)
-    )
-
-    max_error = max(errors.values())
-
-    return {
-        "epsilon": epsilon,
-        "mae": mae,
-        "rmse": rmse,
-        "max_error": max_error,
-        "num_reported_items": len(private_counts),
-        "private_counts": private_counts,
-        "errors": errors,
-    }
-
-def evaluate_epsilon_sweep(stream, k, epsilons, delta, trials=20):
-    """
-    Run DP Misra-Gries for multiple epsilon values.
-
-    Returns one summary row per epsilon.
-    """
-    results = []
-
-    for epsilon in epsilons:
-        trial_results = []
-
-        for _ in range(trials):
-            result = evaluate_once(
-                stream=stream,
-                k=k,
+        if algorithm == "pmg":
+            model = DP_Misra_Gries(
+                stream=self.stream,
+                k=self.k,
                 epsilon=epsilon,
-                delta=delta,
+                delta=self.delta,
             )
-            trial_results.append(result)
 
-        row = {
+        elif algorithm == "chan":
+            model = ChanPrivateMisraGries(
+                stream=self.stream,
+                k=self.k,
+                epsilon=epsilon,
+                universe=self.universe,
+            )
+
+        else:
+            raise ValueError(f"Unknown algorithm: {algorithm}")
+
+        private_counts = model.compute()
+
+        errors = {}
+
+        for key, true_count in true_counts.items():
+            private_estimate = private_counts.get(key, 0.0)
+            errors[key] = abs(private_estimate - true_count)
+
+        mae = sum(errors.values()) / len(errors)
+
+        rmse = math.sqrt(
+            sum(error ** 2 for error in errors.values()) / len(errors)
+        )
+
+        max_error = max(errors.values())
+
+        return {
+            "algorithm": algorithm,
             "epsilon": epsilon,
-            "avg_mae": statistics.mean(r["mae"] for r in trial_results),
-            "avg_rmse": statistics.mean(r["rmse"] for r in trial_results),
-            "avg_max_error": statistics.mean(r["max_error"] for r in trial_results),
-            "avg_num_reported_items": statistics.mean(
-                r["num_reported_items"] for r in trial_results
-            ),
+            "mae": mae,
+            "rmse": rmse,
+            "max_error": max_error,
+            "num_reported_items": len(private_counts),
+            "private_counts": private_counts,
+            "errors": errors,
         }
 
-        results.append(row)
 
-    return results
+    def evaluate_epsilon_sweep(self, algorithm):
+        """
+        Run one algorithm for multiple epsilon values.
 
-def plot_epsilon_sweep(summary):
-    epsilons = [row["epsilon"] for row in summary]
-    maes = [row["avg_mae"] for row in summary]
-    rmses = [row["avg_rmse"] for row in summary]
-    max_errors = [row["avg_max_error"] for row in summary]
+        Returns one summary row per epsilon.
+        """
+        results = []
 
-    plt.figure()
-    plt.plot(epsilons, maes, marker="o", label="MAE")
-    plt.plot(epsilons, rmses, marker="o", label="RMSE")
-    plt.plot(epsilons, max_errors, marker="o", label="Max error")
+        for epsilon in self.epsilons:
+            trial_results = []
 
-    plt.xscale("log")
-    plt.xlabel("epsilon")
-    plt.ylabel("count error")
-    plt.title("Private Misra-Gries accuracy vs epsilon")
-    plt.legend()
-    plt.show()
+            for _ in range(self.trials):
+                result = self.evaluate_once(
+                    epsilon=epsilon,
+                    algorithm=algorithm,
+                )
+                trial_results.append(result)
 
+            row = {
+                "algorithm": algorithm,
+                "epsilon": epsilon,
+                "avg_mae": statistics.mean(r["mae"] for r in trial_results),
+                "avg_rmse": statistics.mean(r["rmse"] for r in trial_results),
+                "avg_max_error": statistics.mean(r["max_error"] for r in trial_results),
+                "avg_num_reported_items": statistics.mean(
+                    r["num_reported_items"] for r in trial_results
+                ),
+            }
 
-if __name__ == "__main__": 
-    stream = (
-    ["a"] * 500
-    + ["b"] * 300
-    + ["c"] * 150
-    + ["d"] * 80
-    + ["e"] * 50
-    + ["f"] * 20
-    + ["g"] * 10
-    )
-    k = 5
-    delta = 1e-6
+            results.append(row)
 
-    epsilons = [0.1, 0.25, 0.5, 1.0, 2.0, 5.0]
+        return results
 
-    summary = evaluate_epsilon_sweep(
-        stream=stream,
-        k=k,
-        epsilons=epsilons,
-        delta=delta,
-        trials=50,
-    )
+    def plot_comparison(self, pmg_summary, chan_summary):
+        pmg_epsilons = [row["epsilon"] for row in pmg_summary]
+        chan_epsilons = [row["epsilon"] for row in chan_summary]
 
-    plot_epsilon_sweep(summary)
+        pmg_maes = [row["avg_mae"] for row in pmg_summary]
+        chan_maes = [row["avg_mae"] for row in chan_summary]
 
-    for row in summary:
-        print(row)
+        pmg_rmses = [row["avg_rmse"] for row in pmg_summary]
+        chan_rmses = [row["avg_rmse"] for row in chan_summary]
+
+        pmg_max_errors = [row["avg_max_error"] for row in pmg_summary]
+        chan_max_errors = [row["avg_max_error"] for row in chan_summary]
+
+        plt.figure()
+        plt.plot(pmg_epsilons, pmg_maes, marker="o", label="New PMG - MAE")
+        plt.plot(chan_epsilons, chan_maes, marker="o", label="Chan MG - MAE")
+        plt.xscale("log")
+        plt.xlabel("epsilon")
+        plt.ylabel("MAE")
+        plt.title("MAE vs epsilon")
+        plt.legend()
+        fileName = f"MAE_{self.ExperimentName}_{self.k}_{self.delta}.pdf"
+        plt.savefig(f"Fig/{fileName}")
+        plt.show()
+
+        plt.figure()
+        plt.plot(pmg_epsilons, pmg_rmses, marker="o", label="New PMG - RMSE")
+        plt.plot(chan_epsilons, chan_rmses, marker="o", label="Chan MG - RMSE")
+        plt.xscale("log")
+        plt.xlabel("epsilon")
+        plt.ylabel("RMSE")
+        plt.title("RMSE vs epsilon")
+        plt.legend()
+        fileName = f"RMSE_{self.ExperimentName}_{self.k}_{self.delta}.pdf"
+        plt.savefig(f"Fig/{fileName}")
+        plt.show()
+
+        plt.figure()
+        plt.plot(pmg_epsilons, pmg_max_errors, marker="o", label="New PMG - Max error")
+        plt.plot(chan_epsilons, chan_max_errors, marker="o", label="Chan MG - Max error")
+        plt.xscale("log")
+        plt.xlabel("epsilon")
+        plt.ylabel("Max error")
+        plt.title("Max error vs epsilon")
+        plt.legend()
+        fileName = f"MaxError_{self.ExperimentName}_{self.k}_{self.delta}.pdf"
+        plt.savefig(f"Fig/{fileName}")
+        plt.show()
+
