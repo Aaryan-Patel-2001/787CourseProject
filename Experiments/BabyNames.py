@@ -49,6 +49,7 @@ def load_baby_names_stream(folder_path="BabyNamesDataset", include_gender=False)
 
 
 stream = load_baby_names_stream("BabyNamesDataset")
+stream = stream[:1000000]
 counts = Counter(stream)
 
 print("stream length:", len(stream))
@@ -58,7 +59,7 @@ print("starting Experiment")
 k = 50
 epsilons = [0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]
 delta = 1e-6 
-trials = 20 
+trials = 3
 experiment_name = "BabyNames"
 
 Test(stream, k, epsilons, delta, trials=trials, ExperimentName=experiment_name)
