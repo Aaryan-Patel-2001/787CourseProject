@@ -61,7 +61,8 @@ epsilons = [0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]
 delta = 1e-6 
 trials = 3
 experiment_name = "BabyNames"
+Test(stream, k, epsilons, delta, trials=trials, ExperimentName=experiment_name)
 
 ks = [5, 10, 50, 100, 150, 200, 500]
 epsilon=1.0
-TestKSweep(stream, ks, epsilon, delta, trials=trials, ExperimentName=experiment_name)
+# TestKSweep(stream, ks, epsilon, delta, trials=trials, ExperimentName=experiment_name)

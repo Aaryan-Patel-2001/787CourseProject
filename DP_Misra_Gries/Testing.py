@@ -17,6 +17,7 @@ class Test:
         self.ExperimentName = ExperimentName
 
         pmg_summary = self.evaluate_epsilon_sweep("pmg")
+        self.plot_pmg_only(pmg_summary)
         chan_summary = self.evaluate_epsilon_sweep("chan")
 
         self.plot_comparison(pmg_summary, chan_summary)
@@ -165,6 +166,46 @@ class Test:
         plt.legend()
         fileName = f"MaxError_{self.ExperimentName}_{self.k}_{self.delta}.pdf"
         plt.savefig(f"Fig/{fileName}")
+        plt.show()
+
+    def plot_pmg_only(self, pmg_summary):
+        pmg_epsilons = [row["epsilon"] for row in pmg_summary]
+
+        pmg_maes = [row["avg_mae"] for row in pmg_summary]
+        pmg_rmses = [row["avg_rmse"] for row in pmg_summary]
+        pmg_max_errors = [row["avg_max_error"] for row in pmg_summary]
+
+        plt.figure()
+        plt.plot(pmg_epsilons, pmg_maes, marker="o", label="New PMG - MAE")
+        plt.xscale("log")
+        plt.xlabel("epsilon")
+        plt.ylabel("MAE")
+        plt.title("PMG MAE vs epsilon")
+        plt.legend()
+        fileName = f"PMG_MAE_{self.ExperimentName}_{self.k}_{self.delta}.pdf"
+        plt.savefig(f"Fig/{fileName}", bbox_inches="tight")
+        plt.show()
+
+        plt.figure()
+        plt.plot(pmg_epsilons, pmg_rmses, marker="o", label="New PMG - RMSE")
+        plt.xscale("log")
+        plt.xlabel("epsilon")
+        plt.ylabel("RMSE")
+        plt.title("PMG RMSE vs epsilon")
+        plt.legend()
+        fileName = f"PMG_RMSE_{self.ExperimentName}_{self.k}_{self.delta}.pdf"
+        plt.savefig(f"Fig/{fileName}", bbox_inches="tight")
+        plt.show()
+
+        plt.figure()
+        plt.plot(pmg_epsilons, pmg_max_errors, marker="o", label="New PMG - Max error")
+        plt.xscale("log")
+        plt.xlabel("epsilon")
+        plt.ylabel("Max error")
+        plt.title("PMG Max error vs epsilon")
+        plt.legend()
+        fileName = f"PMG_MaxError_{self.ExperimentName}_{self.k}_{self.delta}.pdf"
+        plt.savefig(f"Fig/{fileName}", bbox_inches="tight")
         plt.show()
 
 
@@ -342,5 +383,45 @@ class TestKSweep:
         plt.title(f"Max Error vs k, epsilon={self.epsilon}, delta={self.delta}")
         plt.legend()
         file_name = f"MaxError_vs_k_{self.ExperimentName}_eps{self.epsilon}_delta{self.delta}.pdf"
+        plt.savefig(self.fig_dir / file_name, bbox_inches="tight")
+        plt.show()
+
+    def plot_pmg_only(self, pmg_summary):
+        pmg_ks = [row["k"] for row in pmg_summary]
+
+        pmg_maes = [row["avg_mae"] for row in pmg_summary]
+        pmg_rmses = [row["avg_rmse"] for row in pmg_summary]
+        pmg_max_errors = [row["avg_max_error"] for row in pmg_summary]
+
+        # MAE plot
+        plt.figure()
+        plt.plot(pmg_ks, pmg_maes, marker="o", label="New PMG - MAE")
+        plt.xlabel("k")
+        plt.ylabel("MAE")
+        plt.title(f"PMG MAE vs k, epsilon={self.epsilon}, delta={self.delta}")
+        plt.legend()
+        file_name = f"PMG_MAE_vs_k_{self.ExperimentName}_eps{self.epsilon}_delta{self.delta}.pdf"
+        plt.savefig(self.fig_dir / file_name, bbox_inches="tight")
+        plt.show()
+
+        # RMSE plot
+        plt.figure()
+        plt.plot(pmg_ks, pmg_rmses, marker="o", label="New PMG - RMSE")
+        plt.xlabel("k")
+        plt.ylabel("RMSE")
+        plt.title(f"PMG RMSE vs k, epsilon={self.epsilon}, delta={self.delta}")
+        plt.legend()
+        file_name = f"PMG_RMSE_vs_k_{self.ExperimentName}_eps{self.epsilon}_delta{self.delta}.pdf"
+        plt.savefig(self.fig_dir / file_name, bbox_inches="tight")
+        plt.show()
+
+        # Max error plot
+        plt.figure()
+        plt.plot(pmg_ks, pmg_max_errors, marker="o", label="New PMG - Max error")
+        plt.xlabel("k")
+        plt.ylabel("Max error")
+        plt.title(f"PMG Max Error vs k, epsilon={self.epsilon}, delta={self.delta}")
+        plt.legend()
+        file_name = f"PMG_MaxError_vs_k_{self.ExperimentName}_eps{self.epsilon}_delta{self.delta}.pdf"
         plt.savefig(self.fig_dir / file_name, bbox_inches="tight")
         plt.show()

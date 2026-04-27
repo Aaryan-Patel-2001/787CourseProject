@@ -55,7 +55,7 @@ class DP_Misra_Gries:
 
         noisy = {}
         for key, count in counters.items():
-            independent_noise = LaplaceNoiseGen.sample()
+            independent_noise = DiffprivlibLaplaceNoise(self.epsilon).sample()
             noisy[key] = count + shared_noise + independent_noise
 
         return noisy
