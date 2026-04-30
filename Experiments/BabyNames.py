@@ -48,21 +48,36 @@ def load_baby_names_stream(folder_path="BabyNamesDataset", include_gender=False)
     return stream
 
 
-stream = load_baby_names_stream("BabyNamesDataset")
-stream = stream[:1000000]
+stream = load_baby_names_stream("BabyNamesDataset")[:10000000]
 counts = Counter(stream)
 
 print("stream length:", len(stream))
 print("distinct observed names:", len(counts))
 print("starting Experiment")
 
-k = 100
-epsilons = [0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]
-delta = 1e-6 
-trials = 3
-experiment_name = "BabyNames"
-Test(stream, k, epsilons, delta, trials=trials, ExperimentName=experiment_name)
 
-ks = [5, 10, 50, 100, 150, 200, 500]
-epsilon=1.0
-# TestKSweep(stream, ks, epsilon, delta, trials=trials, ExperimentName=experiment_name)
+epsilons = [0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]
+ks = [500, 1000, 2500]
+delta = 1/(len(stream)*len(stream))
+trials = 10
+experiment_name = "BabyNames"
+for k in ks:
+    ####### [ Graphs to expect out of this: 4]
+    # Regular AE 
+    # Top-K MAE 
+    # Recall@k 
+    # Max Error 
+    #######
+    Test(stream, k, epsilons, delta, trials=trials, ExperimentName=experiment_name)
+
+
+ks = [100, 250, 500, 1000, 2500, 5000, 6260]
+epsilons=[0.05, 0.1, 0.5, 1.0]
+for epsilon in epsilons:
+    ####### [ Graphs to expect out of this: 4]
+    # Regular AE 
+    # Top-K MAE 
+    # Recall@k 
+    # Max Error 
+    #######
+    TestKSweep(stream, ks, epsilon, delta, trials=trials, ExperimentName=experiment_name)

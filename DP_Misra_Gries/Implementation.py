@@ -11,7 +11,7 @@ class DP_Misra_Gries:
         if epsilon <= 0:
             raise ValueError("epsilon must be positive")
         if not (0 < delta < 1):
-            raise ValueError("delta must be in (0, 1)")
+            raise ValueError(f"delta must be in (0, 1). Found: {delta}")
         self.stream = stream 
         self.k = k 
         self.epsilon = epsilon 
