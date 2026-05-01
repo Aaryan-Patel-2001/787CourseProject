@@ -55,29 +55,36 @@ print("stream length:", len(stream))
 print("distinct observed names:", len(counts))
 print("starting Experiment")
 
+max_width = 50
+max_count = max(counts.values())
 
-epsilons = [0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]
-ks = [500, 1000, 2500]
-delta = 1/(len(stream)*len(stream))
-trials = 10
-experiment_name = "BabyNames"
-for k in ks:
-    ####### [ Graphs to expect out of this: 4]
-    # Regular AE 
-    # Top-K MAE 
-    # Recall@k 
-    # Max Error 
-    #######
-    Test(stream, k, epsilons, delta, trials=trials, ExperimentName=experiment_name)
+for item, freq in counts.most_common():
+    bar_len = int(freq / max_count * max_width)
+    print(f"{item:>5}: {'#' * bar_len} ({freq})")
 
 
-ks = [100, 250, 500, 1000, 2500, 5000, 6260]
-epsilons=[0.05, 0.1, 0.5, 1.0]
-for epsilon in epsilons:
-    ####### [ Graphs to expect out of this: 4]
-    # Regular AE 
-    # Top-K MAE 
-    # Recall@k 
-    # Max Error 
-    #######
-    TestKSweep(stream, ks, epsilon, delta, trials=trials, ExperimentName=experiment_name)
+# epsilons = [0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]
+# ks = [500, 1000, 2500]
+# delta = 1/(len(stream)*len(stream))
+# trials = 10
+# experiment_name = "BabyNames"
+# for k in ks:
+#     ####### [ Graphs to expect out of this: 4]
+#     # Regular AE 
+#     # Top-K MAE 
+#     # Recall@k 
+#     # Max Error 
+#     #######
+#     Test(stream, k, epsilons, delta, trials=trials, ExperimentName=experiment_name)
+
+
+# ks = [100, 250, 500, 1000, 2500, 5000, 6260]
+# epsilons=[0.05, 0.1, 0.5, 1.0]
+# for epsilon in epsilons:
+#     ####### [ Graphs to expect out of this: 4]
+#     # Regular AE 
+#     # Top-K MAE 
+#     # Recall@k 
+#     # Max Error 
+#     #######
+#     TestKSweep(stream, ks, epsilon, delta, trials=trials, ExperimentName=experiment_name)
